@@ -157,7 +157,6 @@ class NewsModelTrainer:
                 args=args,
                 train_dataset=tokenized,
                 data_collator=data_collator,
-                tokenizer=tokenizer,
             )
             trainer.train()
 
