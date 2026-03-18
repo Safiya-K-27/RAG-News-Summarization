@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from pprint import pprint
 
 from config import AppConfig
@@ -19,17 +20,72 @@ from agents.training import NewsModelTrainer
 from utils.schema import UserPreferences
 
 
+def _ask_choice(prompt: str, valid: tuple[str, ...], default_value: str) -> str:
+    """Read a validated single-choice input with safe fallback for non-interactive runs."""
+    valid_set = set(valid)
+    default_normalized = default_value.lower().strip()
+    if default_normalized not in valid_set:
+        default_normalized = valid[0]
+
+    try:
+        raw = input(f"{prompt} ({'/'.join(valid)}) [default: {default_normalized}]: ").strip().lower()
+    except EOFError:
+        return default_normalized
+
+    if not raw:
+        return default_normalized
+    if raw in valid_set:
+        return raw
+
+    print(f"Invalid choice '{raw}'. Using default '{default_normalized}'.")
+    return default_normalized
+
+
+def _collect_user_preferences(config: AppConfig) -> tuple[UserPreferences, str]:
+    """Collect user topic and preferences; interactive in Colab terminal, fallback to env defaults."""
+    use_interactive = os.getenv("INTERACTIVE_INPUTS", "true").lower() == "true"
+
+    topic = config.default_news_topic
+    reading_level = config.default_reading_level.lower().strip()
+    summary_length = config.default_length.lower().strip()
+
+    if use_interactive:
+        try:
+            entered_topic = input(f"Enter news topic [default: {topic}]: ").strip()
+            if entered_topic:
+                topic = entered_topic
+
+            reading_level = _ask_choice(
+                "Choose reading level",
+                ("simple", "advance"),
+                "simple" if reading_level == "simple" else "advance",
+            )
+            summary_length = _ask_choice(
+                "Choose summary length",
+                ("short", "long"),
+                "short" if summary_length == "short" else "long",
+            )
+        except Exception:
+            # Keep env defaults if interactive prompt is unavailable.
+            pass
+
+    canonical_reading_level = "advanced" if reading_level == "advance" else "simple"
+    canonical_summary_length = "short" if summary_length == "short" else "long"
+
+    preferences = UserPreferences(
+        length=canonical_summary_length,
+        tone=config.default_tone,
+        bias_control=config.default_bias_control,
+        reading_level=canonical_reading_level,
+    )
+    return preferences, topic
+
+
 def run_pipeline() -> None:
     config = AppConfig()
 
     # User preferences can come from API/UI in a production deployment.
-    preferences = UserPreferences(
-        length=config.default_length,
-        tone=config.default_tone,
-        bias_control=config.default_bias_control,
-        reading_level=config.default_reading_level,
-    )
-    query = config.default_news_topic
+    preferences, query = _collect_user_preferences(config)
     required_entities = None
 
     ingestion_agent = DataIngestionAgent(config)

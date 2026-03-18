@@ -26,6 +26,7 @@ class PersonalizationAgent:
         reading_level_instruction = {
             "simple": "Use short sentences and common vocabulary suitable for broad audiences.",
             "medium": "Use clear language with moderate detail and minimal jargon.",
+            "advance": "Use richer detail, nuanced phrasing, and domain-appropriate terminology.",
             "advanced": "Use richer detail, nuanced phrasing, and domain-appropriate terminology.",
         }.get(preferences.reading_level, "Use clear language with moderate detail.")
 
