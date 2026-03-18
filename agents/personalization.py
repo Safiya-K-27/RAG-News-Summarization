@@ -23,4 +23,10 @@ class PersonalizationAgent:
             "balanced": "Present multiple viewpoints when available.",
         }.get(preferences.bias_control, "Stay factual and balanced.")
 
-        return "\n".join([length_instruction, tone_instruction, bias_instruction])
+        reading_level_instruction = {
+            "simple": "Use short sentences and common vocabulary suitable for broad audiences.",
+            "medium": "Use clear language with moderate detail and minimal jargon.",
+            "advanced": "Use richer detail, nuanced phrasing, and domain-appropriate terminology.",
+        }.get(preferences.reading_level, "Use clear language with moderate detail.")
+
+        return "\n".join([length_instruction, tone_instruction, bias_instruction, reading_level_instruction])

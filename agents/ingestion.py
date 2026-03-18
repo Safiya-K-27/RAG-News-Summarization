@@ -43,6 +43,7 @@ class DataIngestionAgent:
                 continue
             d.text = text
             d.title = clean_text(d.title)
+            d.summary = clean_text(d.summary)
             processed.append(d)
         return processed
 
@@ -51,6 +52,7 @@ class DataIngestionAgent:
             dataset_name="cnn_dailymail",
             subset="3.0.0",
             text_field="article",
+            summary_field="highlights",
             title_field=None,
             source="cnn_dailymail",
         )
@@ -60,6 +62,7 @@ class DataIngestionAgent:
             dataset_name="xsum",
             subset=None,
             text_field="document",
+            summary_field="summary",
             title_field=None,
             source="xsum",
         )
@@ -69,6 +72,7 @@ class DataIngestionAgent:
             dataset_name="multi_news",
             subset=None,
             text_field="document",
+            summary_field="summary",
             title_field=None,
             source="multi_news",
         )
@@ -78,6 +82,7 @@ class DataIngestionAgent:
         dataset_name: str,
         subset: str | None,
         text_field: str,
+        summary_field: str | None,
         title_field: str | None,
         source: str,
     ) -> List[Document]:
@@ -96,12 +101,14 @@ class DataIngestionAgent:
                 if not text:
                     continue
                 title = str(row.get(title_field, f"{source} article {idx}")) if title_field else f"{source} article {idx}"
+                summary = str(row.get(summary_field, "")).strip() if summary_field else ""
                 docs.append(
                     Document(
                         doc_id=f"{source}_{idx}",
                         source=source,
                         title=title,
                         text=text,
+                        summary=summary,
                     )
                 )
         except Exception:
@@ -148,6 +155,7 @@ class DataIngestionAgent:
                     source="kaggle_news",
                     title=title,
                     text=full_text,
+                    summary=body or title,
                     metadata={"category": "ENTERTAINMENT"},
                 )
             )
@@ -165,6 +173,7 @@ class DataIngestionAgent:
                     "The production is backed by Red Chillies Entertainment and directed by an acclaimed filmmaker. "
                     "Industry analysts expect a worldwide release in early 2027."
                 ),
+                summary="Shah Rukh Khan announced a new film in Mumbai with a projected global release in 2027.",
             ),
             Document(
                 doc_id="dummy_2",
@@ -175,6 +184,7 @@ class DataIngestionAgent:
                     "Executives said the strategy focuses on family-friendly stories and global distribution. "
                     "The announcement followed strong growth in South Asian subscriptions last quarter."
                 ),
+                summary="A streaming platform signed Bollywood actors to support global family-friendly releases.",
             ),
             Document(
                 doc_id="dummy_3",
@@ -185,5 +195,6 @@ class DataIngestionAgent:
                     "Organizers confirmed partnerships with studios and independent producers. "
                     "The event is scheduled for October and will host industry roundtables."
                 ),
+                summary="The London film festival expanded its lineup and confirmed global studio partnerships for October.",
             ),
         ]

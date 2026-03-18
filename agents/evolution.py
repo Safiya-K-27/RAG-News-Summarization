@@ -38,7 +38,17 @@ class EvolutionaryOptimizationAgent:
 
         self._score_population(population, query)
         population.sort(key=lambda p: p.fitness, reverse=True)
-        return population[:retain_top_k]
+        unique: List[EventPattern] = []
+        seen = set()
+        for pat in population:
+            signature = (pat.actor.lower(), pat.action.lower(), pat.location.lower(), pat.time.lower())
+            if signature in seen:
+                continue
+            seen.add(signature)
+            unique.append(pat)
+            if len(unique) >= retain_top_k:
+                break
+        return unique
 
     def _score_population(self, population: List[EventPattern], query: str) -> None:
         agreement = self._cross_document_agreement(population)

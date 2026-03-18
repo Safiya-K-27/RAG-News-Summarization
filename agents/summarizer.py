@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import List
 
 from config import AppConfig
@@ -43,7 +44,8 @@ class LLMSummarizerAgent:
             "You are a factual news summarization assistant.\n"
             "Use only the provided context and optimized event patterns.\n"
             "Do not invent facts or entities.\n"
-            f"User preferences: length={preferences.length}, tone={preferences.tone}, bias={preferences.bias_control}\n"
+            f"User preferences: length={preferences.length}, tone={preferences.tone}, "
+            f"bias={preferences.bias_control}, reading_level={preferences.reading_level}\n"
             f"Style controls:\n{controls}\n\n"
             f"Optimized events:\n{events}\n\n"
             f"Retrieved context:\n{context}\n\n"
@@ -74,9 +76,19 @@ class LLMSummarizerAgent:
         try:
             from transformers import pipeline
 
-            summarizer = pipeline("summarization", model=self.config.hf_summarization_model)
-            out = summarizer(prompt[:3500], max_length=220, min_length=80, do_sample=False)
-            return out[0]["summary_text"].strip()
+            model_name = self.config.hf_summarization_model
+            trained_dir = Path(self.config.trained_summarizer_dir)
+            if trained_dir.exists() and any(trained_dir.iterdir()):
+                model_name = str(trained_dir)
+
+            try:
+                summarizer = pipeline("summarization", model=model_name)
+                out = summarizer(prompt[:3500], max_length=220, min_length=80, do_sample=False)
+                return out[0]["summary_text"].strip()
+            except Exception:
+                generator = pipeline("text2text-generation", model=model_name)
+                out = generator(prompt[:3500], max_length=220, do_sample=False)
+                return out[0]["generated_text"].strip()
         except Exception:
             return ""
 

@@ -10,6 +10,7 @@ class Document:
     source: str
     title: str
     text: str
+    summary: str = ""
     metadata: Dict[str, str] = field(default_factory=dict)
 
 
@@ -53,6 +54,7 @@ class UserPreferences:
     length: str = "medium"  # short | medium | long
     tone: str = "formal"  # formal | casual
     bias_control: str = "balanced"  # neutral | balanced
+    reading_level: str = "medium"  # simple | medium | advanced
 
 
 @dataclass

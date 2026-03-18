@@ -15,6 +15,7 @@ from agents.ner import NERAgent
 from agents.personalization import PersonalizationAgent
 from agents.retrieval import HybridRetrievalAgent
 from agents.summarizer import LLMSummarizerAgent
+from agents.training import NewsModelTrainer
 from utils.schema import UserPreferences
 
 
@@ -22,11 +23,33 @@ def run_pipeline() -> None:
     config = AppConfig()
 
     # User preferences can come from API/UI in a production deployment.
-    preferences = UserPreferences(length="medium", tone="formal", bias_control="balanced")
-    query = "latest entertainment industry announcements and partnerships"
-    required_entities = {"PERSON": ["Shah Rukh Khan"], "GPE": ["India", "London"]}
+    preferences = UserPreferences(
+        length=config.default_length,
+        tone=config.default_tone,
+        bias_control=config.default_bias_control,
+        reading_level=config.default_reading_level,
+    )
+    query = config.default_news_topic
+    required_entities = None
 
     ingestion_agent = DataIngestionAgent(config)
+
+    # Stage 1
+    documents = ingestion_agent.load_documents()
+    print(f"[Stage 1] Loaded documents: {len(documents)}")
+
+    if config.run_training:
+        trainer = NewsModelTrainer(config)
+        training_result = trainer.train_all(documents)
+        config.embedding_model = training_result.embedding_model_path
+        config.hf_summarization_model = training_result.summarizer_model_path
+        config.llm_provider = "hf"
+        print(
+            "[Training] Completed with "
+            f"{training_result.trained_pairs} supervised pairs | "
+            f"retriever={config.embedding_model} | summarizer={config.hf_summarization_model}"
+        )
+
     chunking_agent = HierarchicalChunkingAgent()
     ner_agent = NERAgent(config)
     retrieval_agent = HybridRetrievalAgent(config)
@@ -36,10 +59,6 @@ def run_pipeline() -> None:
     personalization_agent = PersonalizationAgent()
     summarizer_agent = LLMSummarizerAgent(config)
     fact_check_agent = FactCheckingAgent()
-
-    # Stage 1
-    documents = ingestion_agent.load_documents()
-    print(f"[Stage 1] Loaded documents: {len(documents)}")
 
     # Stage 2
     chunks = chunking_agent.chunk_documents(documents)
