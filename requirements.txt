@@ -1,0 +1,12 @@
+datasets==2.21.0
+sentence-transformers==3.0.1
+spacy==3.7.5
+faiss-cpu==1.8.0.post1
+scikit-learn==1.5.1
+networkx==3.3
+numpy==1.26.4
+pandas==2.2.2
+python-dotenv==1.0.1
+openai==1.40.6
+transformers==4.43.3
+tqdm==4.66.5
