@@ -19,12 +19,18 @@ class FactCheckingAgent:
         context_tokens = self._tokenize(context_text)
         known_entities = self._collect_known_entities(retrieved_chunks)
 
-        checked_lines: List[str] = []
+        scored_lines: List[tuple[str, float]] = []
         for line in [ln.strip() for ln in summary.splitlines() if ln.strip()]:
-            if self._is_supported(line, context_tokens, known_entities):
-                checked_lines.append(line)
+            score = self._support_score(line, context_tokens, known_entities)
+            scored_lines.append((line, score))
+
+        checked_lines = [line for line, score in scored_lines if score >= 0.25]
 
         if not checked_lines:
+            # Keep highest-confidence lines instead of returning an empty summary.
+            top_lines = [line for line, _ in sorted(scored_lines, key=lambda x: x[1], reverse=True)[:2]]
+            if top_lines:
+                return "Low-confidence summary (partially supported):\n" + "\n".join(top_lines)
             return "Summary could not be fully verified with retrieved context."
         return "\n".join(checked_lines)
 
@@ -41,17 +47,18 @@ class FactCheckingAgent:
                     ents.add(value.lower())
         return ents
 
-    def _is_supported(self, line: str, context_tokens: Set[str], known_entities: Set[str]) -> bool:
+    def _support_score(self, line: str, context_tokens: Set[str], known_entities: Set[str]) -> float:
         tokens = self._tokenize(line)
         if not tokens:
-            return False
+            return 0.0
 
         overlap_ratio = len(tokens.intersection(context_tokens)) / max(len(tokens), 1)
 
         entities = self._extract_capitalized_entities(line)
         unknown_entities = [e for e in entities if e.lower() not in known_entities]
+        unknown_penalty = min(len(unknown_entities), 3) * 0.15
 
-        return overlap_ratio >= 0.35 and len(unknown_entities) <= 1
+        return max(0.0, overlap_ratio - unknown_penalty)
 
     @staticmethod
     def _extract_capitalized_entities(text: str) -> List[str]:

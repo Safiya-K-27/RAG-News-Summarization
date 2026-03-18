@@ -91,7 +91,8 @@ class NewsModelTrainer:
             )
             model.save(str(self.config.trained_embedding_dir))
             return str(self.config.trained_embedding_dir)
-        except Exception:
+        except Exception as exc:
+            print(f"[Training][Retriever] Falling back to base embedding model due to: {exc}")
             return self.config.embedding_model
 
     def _train_summarizer(self, base_pairs: List[Tuple[str, str]], domain_pairs: List[Tuple[str, str]]) -> str:
@@ -163,5 +164,6 @@ class NewsModelTrainer:
             trainer.save_model(str(self.config.trained_summarizer_dir))
             tokenizer.save_pretrained(str(self.config.trained_summarizer_dir))
             return str(self.config.trained_summarizer_dir)
-        except Exception:
+        except Exception as exc:
+            print(f"[Training][Summarizer] Falling back to configured HF model due to: {exc}")
             return self.config.hf_summarization_model
