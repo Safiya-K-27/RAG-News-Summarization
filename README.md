@@ -22,7 +22,6 @@ project/
 |   |-- event_extraction.py
 |   |-- evolution.py
 |   |-- defense.py
-|   |-- summarizer.py
 |   |-- personalization.py
 |   |-- fact_check.py
 |   |-- training.py
@@ -30,8 +29,7 @@ project/
 |   |-- schema.py
 |   |-- text_utils.py
 |-- config.py
-|-- main.py
-|-- colab_bootstrap.py
+|-- GenAI_Notebook.ipynb
 |-- requirements-colab.txt
 |-- requirements.txt
 ```
@@ -50,23 +48,16 @@ python -m spacy download en_core_web_sm
 
 ## Run
 
-```bash
-python main.py
-```
+Use [GenAI_Notebook.ipynb](GenAI_Notebook.ipynb) as the final execution entrypoint.
 
-By default, the project uses built-in dummy/test data so it runs without external datasets.
-Set `USE_HF_DATASETS=true` to ingest Hugging Face datasets.
+In Colab:
+1. Open [GenAI_Notebook.ipynb](GenAI_Notebook.ipynb).
+2. Run cells in order.
+3. Provide your topic, reading level, and summary length when prompted.
 
 ## Full Model Training (Train Then Infer)
 
-Enable complete model training with environment flags:
-
-```bash
-export RUN_TRAINING=true
-export USE_HF_DATASETS=true
-export MAX_DOCS_PER_SOURCE=500
-python main.py
-```
+Enable complete model training by setting environment variables in notebook cells before the training cell.
 
 When training mode is enabled, the pipeline performs:
 - Retriever fine-tuning from summary-document pairs
@@ -74,7 +65,7 @@ When training mode is enabled, the pipeline performs:
 - Checkpoint saving under `checkpoints/retriever` and `checkpoints/summarizer`
 - Inference using trained checkpoints in the same run
 
-For Colab, set the same environment variables before running `python colab_bootstrap.py`.
+For Colab, set the same environment variables directly in notebook cells.
 
 ## Optional: Kaggle News Category Dataset
 
@@ -82,12 +73,10 @@ Set `KAGGLE_NEWS_CSV_PATH` in `.env` and the ingestion stage will filter only EN
 
 ## Google Colab
 
-Fast path (Option 1):
-
-```python
-%cd /content/Project
-!python colab_bootstrap.py
-```
+Fast path:
+1. Clone the repository in Colab.
+2. Install dependencies from `requirements-colab.txt`.
+3. Run notebook cells in [GenAI_Notebook.ipynb](GenAI_Notebook.ipynb).
 
 To match the user-input flow (topic, reading level, neutrality, summary length), set environment variables before running:
 
@@ -105,7 +94,7 @@ For complete train-then-infer runs in Colab:
 os.environ["RUN_TRAINING"] = "true"
 os.environ["USE_HF_DATASETS"] = "true"
 os.environ["MAX_DOCS_PER_SOURCE"] = "500"
-!python main.py
+# then run the notebook training/inference cell
 ```
 
 ## Performance Notes
