@@ -55,6 +55,58 @@ In Colab:
 2. Run cells in order.
 3. Provide your topic, reading level, and summary length when prompted.
 
+## Train Once, Then Serve Frontend
+
+This project now supports a persistent workflow:
+- Train once and save checkpoints.
+- Launch a simple frontend for user inputs and summary generation.
+
+### 1) Train and save checkpoints
+
+In Colab:
+
+```python
+%cd /content/Project
+!pip install -q -r requirements-colab.txt
+!python -m spacy download en_core_web_sm
+```
+
+Set environment values before training:
+
+```python
+import os
+os.environ["RUN_TRAINING"] = "true"
+os.environ["USE_HF_DATASETS"] = "true"
+os.environ["MAX_DOCS_PER_SOURCE"] = "500"
+os.environ["KAGGLE_NEWS_CSV_PATH"] = "/content/Project/data/raw/news_category_entertainment.csv"
+os.environ["TRAINING_OUTPUT_DIR"] = "/content/drive/MyDrive/rag_news_checkpoints"
+```
+
+Run training:
+
+```python
+!python train_once.py
+```
+
+### 2) Launch frontend (no retraining)
+
+```python
+import os
+os.environ["RUN_TRAINING"] = "false"
+os.environ["USE_HF_DATASETS"] = "true"
+os.environ["MAX_DOCS_PER_SOURCE"] = "500"
+os.environ["KAGGLE_NEWS_CSV_PATH"] = "/content/Project/data/raw/news_category_entertainment.csv"
+os.environ["TRAINING_OUTPUT_DIR"] = "/content/drive/MyDrive/rag_news_checkpoints"
+
+!python frontend_app.py
+```
+
+The frontend asks for:
+- News topic
+- Reading level (`simple` or `advanced`)
+- Summary length (`short` or `long`)
+- Neutrality preference (`neutral` or `balanced`)
+
 ## Full Model Training (Train Then Infer)
 
 Enable complete model training by setting environment variables in notebook cells before the training cell.

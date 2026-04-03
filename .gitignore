@@ -1,0 +1,20 @@
+# Secrets
+kaggle.json
+.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Training artifacts
+checkpoints/
+
+# OS/Editor
+.DS_Store
+Thumbs.db
+.vscode/
